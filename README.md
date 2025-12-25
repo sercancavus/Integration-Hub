@@ -18,7 +18,7 @@ IntegrationHub, .NET 8 teknolojileri kullanılarak geliştirilmiş, N-Katmanlı 
   - Kategori Yönetimi
   - Resim Yükleme (Image Upload)
 - **Vitrin (Storefront):**
-  - Tüm kullanıcılar için ürün listeleme
+  - Tüm kullanıcılar için ürün listeleme (Public Access)
   - Dinamik ürün kartları ve stok durumu görüntüleme
 
 ## 🛠️ Kurulum
