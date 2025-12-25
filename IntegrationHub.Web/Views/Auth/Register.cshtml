@@ -1,24 +1,30 @@
-﻿@model IntegrationHub.Web.Models.LoginModel
+﻿@model IntegrationHub.Web.Models.RegisterModel
 
 @{
-    ViewData["Title"] = "Giriş Yap";
+    ViewData["Title"] = "Kayıt Ol";
 }
 
 <div class="row justify-content-center mt-5">
     <div class="col-md-4">
         <div class="card shadow">
-            <div class="card-header bg-primary text-white text-center">
-                <h3>Giriş Yap</h3>
+            <div class="card-header bg-success text-white text-center">
+                <h3>Kayıt Ol</h3>
             </div>
             <div class="card-body">
 
                 <div asp-validation-summary="All" class="text-danger mb-3"></div>
 
-                <form asp-action="Login" method="post">
+                <form asp-action="Register" method="post">
+
+                    <div class="mb-3">
+                        <label class="form-label">Ad Soyad</label>
+                        <input asp-for="UserName" class="form-control" placeholder="Örn: Ahmet Yılmaz" />
+                        <span asp-validation-for="UserName" class="text-danger"></span>
+                    </div>
 
                     <div class="mb-3">
                         <label class="form-label">Email Adresi</label>
-                        <input asp-for="Email" type="email" class="form-control" placeholder="admin@ornek.com" />
+                        <input asp-for="Email" type="email" class="form-control" placeholder="mail@ornek.com" />
                         <span asp-validation-for="Email" class="text-danger"></span>
                     </div>
 
@@ -29,12 +35,12 @@
                     </div>
 
                     <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary">Giriş Yap</button>
+                        <button type="submit" class="btn btn-success">Kayıt Ol</button>
                     </div>
                 </form>
             </div>
             <div class="card-footer text-center">
-                <small>Hesabın yok mu? <a asp-controller="Auth" asp-action="Register">Kayıt Ol</a></small>
+                <small>Zaten hesabın var mı? <a asp-controller="Auth" asp-action="Login">Giriş Yap</a></small>
             </div>
         </div>
     </div>

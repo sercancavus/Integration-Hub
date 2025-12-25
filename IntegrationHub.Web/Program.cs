@@ -1,31 +1,31 @@
-// IntegrationHub.Web -> Program.cs
-using IntegrationHub.Web.Services; // Az önce oluþturduðumuz servisi çaðýrýyoruz
+using IntegrationHub.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// MVC kullanýyorsan:
+// MVC Servisleri
 builder.Services.AddControllersWithViews();
 
+// Oturum (Session) Ayarlarý
 builder.Services.AddDistributedMemoryCache();
-
 builder.Services.AddSession(options =>
 {
-    options.IdleTimeout = TimeSpan.FromMinutes(30); // 30 dakika boþ durursa oturum düþsün
-    options.Cookie.HttpOnly = true; // Güvenlik için
-    options.Cookie.IsEssential = true; // GDPR kurallarý için gerekli
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
 });
 
-// ÝÞTE BURASI ÖNEMLÝ: ApiService Baðlantýsý
-builder.Services.AddHttpClient<ApiService>(client =>
+builder.Services.AddHttpClient<IApiService, ApiService>(client =>
 {
-    // API PROJENÝN çalýþtýðý adresi buraya yazmalýsýn.
-    // IntegrationHub.API projesini çalýþtýrdýðýnda tarayýcýda yazan adres neyse o.
-    // Örnek: https://localhost:7045/
+    // API'nin launchSettings.json dosyasýndaki adresi buraya yazdýk.
+    // DÝKKAT: "https" deðil "http" ve port "5001"
     client.BaseAddress = new Uri("http://localhost:5001/");
 });
 
+// ------------------------------------------
+
 var app = builder.Build();
 
+// Hata Yönetimi
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -37,7 +37,8 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-app.UseSession(); // Oturum yönetimini etkinleþtir
+// Oturum Middleware'i (Sýralama Önemli: Routing'den sonra, Auth'dan önce)
+app.UseSession();
 
 app.UseAuthorization();
 

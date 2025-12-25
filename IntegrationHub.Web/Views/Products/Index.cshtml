@@ -2,49 +2,53 @@
 
 @{
     ViewData["Title"] = "Ürün Listesi";
+    // API Adresini buraya yazıyoruz ki resimleri oradan çekelim
+    var apiBaseUrl = "http://localhost:5001";
 }
 
-<a asp-action="Create" class="btn btn-success mb-3">Yeni Ürün Ekle</a>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Ürün Listesi</h2>
+        <a asp-action="Create" class="btn btn-primary">+ Yeni Ürün Ekle</a>
+    </div>
 
-<h2>Ürünler</h2>
-
-<table class="table table-bordered table-striped table-hover">
-    <thead class="table-dark">
-        <tr>
-            <th>Ürün Adı</th>
-            <th>Kategori</th>
-            <th>Barkod</th>
-            <th>Fiyat</th>
-            <th>Stok</th>
-            <th>İşlemler</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model)
-        {
+    <table class="table table-bordered table-striped shadow-sm">
+        <thead class="table-dark">
             <tr>
-                <td>@item.Name</td>
-
-                <td>
-                    <span class="badge bg-info text-dark">
-                        @(item.Category?.Name ?? "-")
-                    </span>
-                </td>
-
-                <td>@item.Barcode</td>
-                <td>@item.SalePrice ₺</td>
-                <td>@item.StockQuantity</td>
-
-                <td>
-                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-sm">Düzenle</a>
-
-                    <a asp-action="Delete" asp-route-id="@item.Id"
-                       class="btn btn-danger btn-sm"
-                       onclick="return confirm('Silmek istediğinize emin misiniz?');">
-                        Sil
-                    </a>
-                </td>
+                <th>Resim</th>
+                <th>Ürün Adı</th>
+                <th>Fiyat</th>
+                <th>Stok</th>
+                <th>İşlemler</th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td style="width: 100px; text-align: center;">
+                        @if (!string.IsNullOrEmpty(item.ImageUrl))
+                        {
+                            <img src="@(apiBaseUrl + item.ImageUrl)"
+                                 alt="@item.Name"
+                                 class="img-thumbnail"
+                                 style="max-height: 60px; max-width: 60px;" />
+                        }
+                        else
+                        {
+                            <span class="text-muted" style="font-size: 12px;">Resim Yok</span>
+                        }
+                    </td>
+
+                    <td class="align-middle">@item.Name</td>
+                    <td class="align-middle">@item.SalePrice.ToString("C2")</td>
+                    <td class="align-middle">@item.StockQuantity</td>
+                    <td class="align-middle">
+                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Düzenle</a>
+                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Sil</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
