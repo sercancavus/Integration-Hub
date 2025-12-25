@@ -36,9 +36,19 @@ namespace IntegrationHub.Web.Services
         // ===========================
         // 2. BÖLÜM: ÜRÜNLER
         // ===========================
-        public async Task<List<ProductViewModel>> GetProductsAsync(string token)
+        public async Task<List<ProductViewModel>> GetProductsAsync(string token = null)
         {
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            // Eğer token geldiyse Header'a ekle (Admin panelinden çağrılıyorsa)
+            if (!string.IsNullOrEmpty(token))
+            {
+                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            }
+            else
+            {
+                // Token yoksa (Vitrin), Header'ı temizle ki eski token kalmasın
+                _httpClient.DefaultRequestHeaders.Authorization = null;
+            }
+
             return await _httpClient.GetFromJsonAsync<List<ProductViewModel>>("api/Products");
         }
 

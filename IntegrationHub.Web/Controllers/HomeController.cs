@@ -1,31 +1,27 @@
-using System.Diagnostics;
+using IntegrationHub.Web.Services;
 using Microsoft.AspNetCore.Mvc;
-using IntegrationHub.Web.Models;
 
-namespace IntegrationHub.Web.Controllers;
-
-public class HomeController : Controller
+namespace IntegrationHub.Web.Controllers
 {
-    private readonly ILogger<HomeController> _logger;
-
-    public HomeController(ILogger<HomeController> logger)
+    public class HomeController : Controller
     {
-        _logger = logger;
-    }
+        private readonly IApiService _apiService;
 
-    public IActionResult Index()
-    {
-        return View();
-    }
+        public HomeController(IApiService apiService)
+        {
+            _apiService = apiService;
+        }
 
-    public IActionResult Privacy()
-    {
-        return View();
-    }
+        public async Task<IActionResult> Index()
+        {
+            // Token vermeden çaðýrýyoruz (null gidecek)
+            var products = await _apiService.GetProductsAsync();
+            return View(products);
+        }
 
-    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-    public IActionResult Error()
-    {
-        return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        public IActionResult Privacy()
+        {
+            return View();
+        }
     }
 }

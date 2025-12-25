@@ -11,7 +11,7 @@ namespace IntegrationHub.Web.Services
         Task<bool> RegisterAsync(RegisterDto registerDto);
 
         // --- PRODUCTS (ÜRÜNLER) ---
-        Task<List<ProductViewModel>> GetProductsAsync(string token);
+        Task<List<ProductViewModel>> GetProductsAsync(string token = null);
         Task<ProductViewModel> GetProductByIdAsync(int id, string token);
         Task<bool> AddProductAsync(ProductViewModel model, string token);
         Task<bool> UpdateProductAsync(ProductViewModel model, string token);
