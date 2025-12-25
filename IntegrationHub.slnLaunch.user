@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "Yeni Profil",
+    "Projects": [
+      {
+        "Path": "IntegrationHub.API\\IntegrationHub.API.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "IntegrationHub.Web\\IntegrationHub.Web.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]
