@@ -1,0 +1,32 @@
+﻿@model IntegrationHub.Web.Models.CategoryViewModel
+
+@{
+    ViewData["Title"] = "Kategoriyi Sil";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-danger shadow">
+                <div class="card-header bg-danger text-white">
+                    <h3 class="card-title mb-0">Silme Onayı</h3>
+                </div>
+                <div class="card-body text-center">
+                    <h4 class="text-danger mb-4">Bu kategoriyi silmek istediğine emin misin?</h4>
+
+                    <h2 class="fw-bold display-6">@Model.Name</h2>
+                    <p class="text-muted mt-2">Bu işlem geri alınamaz.</p>
+
+                    <div class="d-flex justify-content-center gap-3 mt-4">
+                        <a asp-action="Index" class="btn btn-secondary">Vazgeç</a>
+
+                        <form asp-action="Delete" method="post">
+                            <input type="hidden" asp-for="Id" />
+                            <button type="submit" class="btn btn-danger">Evet, Sil</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,86 +1,53 @@
 ﻿using IntegrationHub.Web.Models;
-using Newtonsoft.Json;
 using System.Net.Http.Headers;
-using System.Text;
+using System.Net.Http.Json; // Bu satır çok önemli!
 
 namespace IntegrationHub.Web.Services
 {
     public class ApiService : IApiService
     {
-        // --- İŞTE EKSİK OLAN PARÇA BURASIYDI ---
         private readonly HttpClient _httpClient;
 
         public ApiService(HttpClient httpClient)
         {
             _httpClient = httpClient;
         }
-        // ----------------------------------------
 
-        // 1. KAYIT OL (HATA YAKALAYICI MOD AKTİF)
-        public async Task<bool> RegisterAsync(RegisterModel model)
+        // ===========================
+        // 1. BÖLÜM: AUTH (GİRİŞ/KAYIT)
+        // ===========================
+        public async Task<string> LoginAsync(LoginDto loginDto)
         {
-            var jsonContent = new StringContent(JsonConvert.SerializeObject(model), Encoding.UTF8, "application/json");
-
-            // API'ye isteği atıyoruz
-            var response = await _httpClient.PostAsync("api/Auth/Register", jsonContent);
-
-            if (!response.IsSuccessStatusCode)
-            {
-                var hata = await response.Content.ReadAsStringAsync();
-                throw new Exception($"API HATASI: {hata}"); // Hatayı fırlatan yer burası
-            }
-            return response.IsSuccessStatusCode;
-        }
-
-        // 2. GİRİŞ YAP
-        public async Task<string> LoginAsync(LoginModel model)
-        {
-            var jsonContent = new StringContent(JsonConvert.SerializeObject(model), Encoding.UTF8, "application/json");
-            var response = await _httpClient.PostAsync("api/Auth/Login", jsonContent);
-
+            var response = await _httpClient.PostAsJsonAsync("api/Auth/Login", loginDto);
             if (response.IsSuccessStatusCode)
             {
-                var responseData = await response.Content.ReadAsStringAsync();
-                // dynamic kullanarak gelen JSON'ı esnek bir yapıya çeviriyoruz
-                dynamic tokenObj = JsonConvert.DeserializeObject(responseData);
-                return tokenObj.token;
+                var result = await response.Content.ReadFromJsonAsync<AuthResponseDto>();
+                return result?.Token;
             }
             return null;
         }
 
-        // 3. KATEGORİLERİ GETİR
-        public async Task<List<CategoryViewModel>> GetCategoriesAsync(string token)
+        public async Task<bool> RegisterAsync(RegisterDto registerDto)
         {
-            if (string.IsNullOrEmpty(token)) return new List<CategoryViewModel>();
-
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            var response = await _httpClient.GetAsync("api/Categories");
-
-            if (response.IsSuccessStatusCode)
-            {
-                var jsonData = await response.Content.ReadAsStringAsync();
-                return JsonConvert.DeserializeObject<List<CategoryViewModel>>(jsonData);
-            }
-            return new List<CategoryViewModel>();
+            var response = await _httpClient.PostAsJsonAsync("api/Auth/register", registerDto);
+            return response.IsSuccessStatusCode;
         }
 
-        // 4. ÜRÜNLERİ GETİR
+        // ===========================
+        // 2. BÖLÜM: ÜRÜNLER
+        // ===========================
         public async Task<List<ProductViewModel>> GetProductsAsync(string token)
         {
-            if (string.IsNullOrEmpty(token)) return new List<ProductViewModel>();
-
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            var response = await _httpClient.GetAsync("api/Products");
-
-            if (response.IsSuccessStatusCode)
-            {
-                var jsonData = await response.Content.ReadAsStringAsync();
-                return JsonConvert.DeserializeObject<List<ProductViewModel>>(jsonData);
-            }
-            return new List<ProductViewModel>();
+            return await _httpClient.GetFromJsonAsync<List<ProductViewModel>>("api/Products");
         }
 
-        // 5. ÜRÜN EKLE (RESİMLİ)
+        public async Task<ProductViewModel> GetProductByIdAsync(int id, string token)
+        {
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            return await _httpClient.GetFromJsonAsync<ProductViewModel>($"api/Products/{id}");
+        }
+
         public async Task<bool> AddProductAsync(ProductViewModel model, string token)
         {
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
@@ -108,28 +75,10 @@ namespace IntegrationHub.Web.Services
             }
         }
 
-        // 6. ÜRÜN DETAY
-        public async Task<ProductViewModel> GetProductByIdAsync(int id, string token)
-        {
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            var response = await _httpClient.GetAsync($"api/Products/{id}");
-
-            if (response.IsSuccessStatusCode)
-            {
-                var jsonData = await response.Content.ReadAsStringAsync();
-                return JsonConvert.DeserializeObject<ProductViewModel>(jsonData);
-            }
-            return null;
-        }
-
-        // 7. ÜRÜN GÜNCELLE
-        // IntegrationHub.Web -> Services -> ApiService.cs içinde
-
         public async Task<bool> UpdateProductAsync(ProductViewModel model, string token)
         {
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-            // JSON yerine MultipartFormData kullanıyoruz (Resim yükleme desteği için)
             using (var content = new MultipartFormDataContent())
             {
                 content.Add(new StringContent(model.Id.ToString()), "Id");
@@ -141,7 +90,6 @@ namespace IntegrationHub.Web.Services
                 content.Add(new StringContent(model.StockQuantity.ToString()), "StockQuantity");
                 content.Add(new StringContent(model.CategoryId.ToString()), "CategoryId");
 
-                // Eğer yeni bir resim seçildiyse onu da pakete ekle
                 if (model.ImageUpload != null)
                 {
                     var fileStream = model.ImageUpload.OpenReadStream();
@@ -150,26 +98,73 @@ namespace IntegrationHub.Web.Services
                     content.Add(fileContent, "imageFile", model.ImageUpload.FileName);
                 }
 
-                // PUT isteği gönderiyoruz
                 var response = await _httpClient.PutAsync($"api/Products/{model.Id}", content);
-
-                // HATA VARSA YAKALA (Casus Kod) 🕵️‍♂️
-                if (!response.IsSuccessStatusCode)
-                {
-                    var hataMesaji = await response.Content.ReadAsStringAsync();
-                    throw new Exception($"GÜNCELLEME HATASI: {hataMesaji}");
-                }
-
                 return response.IsSuccessStatusCode;
             }
         }
 
-        // 8. ÜRÜN SİL
         public async Task<bool> DeleteProductAsync(int id, string token)
         {
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
             var response = await _httpClient.DeleteAsync($"api/Products/{id}");
             return response.IsSuccessStatusCode;
         }
+
+        // ===========================
+        // 3. BÖLÜM: KATEGORİLER
+        // ===========================
+        public async Task<List<CategoryViewModel>> GetCategoriesAsync(string token)
+        {
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            return await _httpClient.GetFromJsonAsync<List<CategoryViewModel>>("api/Categories");
+        }
+
+        public async Task<CategoryViewModel> GetCategoryByIdAsync(int id, string token)
+        {
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            return await _httpClient.GetFromJsonAsync<CategoryViewModel>($"api/Categories/{id}");
+        }
+
+        // IntegrationHub.Web -> Services -> ApiService.cs içinde
+
+        public async Task<bool> AddCategoryAsync(CategoryViewModel model, string token)
+        {
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            // JSON olarak gönderiyoruz
+            var response = await _httpClient.PostAsJsonAsync("api/Categories", model);
+
+            // --- HATA YAKALAMA (CASUS KOD) ---
+            if (!response.IsSuccessStatusCode)
+            {
+                // API'den gelen gerçek hata mesajını oku
+                var errorContent = await response.Content.ReadAsStringAsync();
+
+                // Hatayı ekranda görebilmek için fırlatıyoruz
+                throw new Exception($"KATEGORİ KAYIT HATASI: {response.StatusCode} - {errorContent}");
+            }
+
+            return response.IsSuccessStatusCode;
+        }
+
+        public async Task<bool> UpdateCategoryAsync(CategoryViewModel model, string token)
+        {
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            var response = await _httpClient.PutAsJsonAsync($"api/Categories/{model.Id}", model);
+            return response.IsSuccessStatusCode;
+        }
+
+        public async Task<bool> DeleteCategoryAsync(int id, string token)
+        {
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            var response = await _httpClient.DeleteAsync($"api/Categories/{id}");
+            return response.IsSuccessStatusCode;
+        }
+    }
+
+    // Yardımcı Class (Login cevabını karşılamak için)
+    public class AuthResponseDto
+    {
+        public string Token { get; set; }
     }
 }

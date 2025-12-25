@@ -1,27 +1,27 @@
-﻿using IntegrationHub.Web.Models;
+﻿using IntegrationHub.Web.Models; // LoginDto ve RegisterDto burada olmalı
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace IntegrationHub.Web.Services
 {
     public interface IApiService
     {
-        // --- AUTH İŞLEMLERİ (Eksikti, geri eklendi) ---
-        Task<bool> RegisterAsync(RegisterModel model);
-        Task<string> LoginAsync(LoginModel model);
+        // --- AUTH ---
+        Task<string> LoginAsync(LoginDto loginDto);
+        Task<bool> RegisterAsync(RegisterDto registerDto);
 
-        // --- KATEGORİ İŞLEMLERİ ---
-        Task<List<CategoryViewModel>> GetCategoriesAsync(string token);
-
-        // --- ÜRÜN İŞLEMLERİ ---
-        // İsim düzeltildi: GetAllProductsAsync -> GetProductsAsync
+        // --- PRODUCTS (ÜRÜNLER) ---
         Task<List<ProductViewModel>> GetProductsAsync(string token);
-
-        // İsim düzeltildi: CreateProductAsync -> AddProductAsync
-        Task<bool> AddProductAsync(ProductViewModel model, string token);
-
         Task<ProductViewModel> GetProductByIdAsync(int id, string token);
-
+        Task<bool> AddProductAsync(ProductViewModel model, string token);
         Task<bool> UpdateProductAsync(ProductViewModel model, string token);
-
         Task<bool> DeleteProductAsync(int id, string token);
+
+        // --- KATEGORİLER ---
+        Task<List<CategoryViewModel>> GetCategoriesAsync(string token);
+        Task<CategoryViewModel> GetCategoryByIdAsync(int id, string token);
+        Task<bool> AddCategoryAsync(CategoryViewModel model, string token);
+        Task<bool> UpdateCategoryAsync(CategoryViewModel model, string token);
+        Task<bool> DeleteCategoryAsync(int id, string token);
     }
 }
